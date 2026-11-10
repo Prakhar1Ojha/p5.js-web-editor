@@ -63,7 +63,8 @@ function CollectionMetadata({ collectionId }) {
               <EditableInput
                 value={name}
                 onChange={handleEditCollectionName}
-                validate={(value) => value !== ''}
+                validate={(value) => value.trim() !== '' && value.length <= 100}
+                inputProps={{ maxLength: 100 }}
               />
             ) : (
               name
@@ -76,6 +77,8 @@ function CollectionMetadata({ collectionId }) {
                 InputComponent="textarea"
                 value={description}
                 onChange={handleEditCollectionDescription}
+                validate={(value) => !value || value.length <= 500}
+                inputProps={{ maxLength: 500 }}
                 emptyPlaceholder={t('Collection.DescriptionPlaceholder')}
               />
             ) : (

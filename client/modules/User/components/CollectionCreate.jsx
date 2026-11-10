@@ -27,7 +27,11 @@ const CollectionCreate = () => {
     dispatch(createCollection({ name, description }));
   };
 
-  const invalid = name === '' || name == null;
+  const isNameEmpty = name.trim() === '';
+  const isNameTooLong = name.length > 100;
+  const isDescriptionTooLong = Boolean(description && description.length > 500);
+
+  const invalid = isNameEmpty || isNameTooLong || isDescriptionTooLong;
 
   return (
     <div className="collection-create">
@@ -50,13 +54,19 @@ const CollectionCreate = () => {
               aria-label={t('CollectionCreate.FormLabelARIA')}
               type="text"
               id="name"
+              maxLength={100}
               value={name}
               placeholder={generatedCollectionName}
               onChange={(e) => setName(e.target.value)}
             />
-            {invalid && (
+            {isNameEmpty && (
               <span className="form-error" aria-live="polite">
                 {t('CollectionCreate.NameRequired')}
+              </span>
+            )}
+            {isNameTooLong && (
+              <span className="form-error" aria-live="polite">
+                {t('CollectionCreate.NameTooLong')}
               </span>
             )}
           </p>
@@ -68,11 +78,17 @@ const CollectionCreate = () => {
               className="form__input form__input-flexible-height"
               aria-label={t('CollectionCreate.DescriptionARIA')}
               id="description"
+              maxLength={500}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t('CollectionCreate.DescriptionPlaceholder')}
               rows="6"
             />
+            {isDescriptionTooLong && (
+              <span className="form-error" aria-live="polite">
+                {t('CollectionCreate.DescriptionTooLong')}
+              </span>
+            )}
           </p>
           <Button type={ButtonTypes.SUBMIT} disabled={invalid}>
             {t('CollectionCreate.SubmitCollectionCreate')}

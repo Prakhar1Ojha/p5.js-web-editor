@@ -30,8 +30,15 @@ collectedProjectSchema.set('toJSON', {
 const collectionSchema = new Schema(
   {
     _id: { type: String, default: shortid.generate },
-    name: { type: String, default: 'My collection' },
-    description: { type: String },
+    name: {
+      type: String,
+      default: 'My collection',
+      maxlength: 100
+    },
+    description: {
+      type: String,
+      maxlength: 500
+    },
     slug: { type: String },
     owner: { type: Schema.Types.ObjectId, ref: 'User' },
     items: { type: [collectedProjectSchema] }

@@ -549,9 +549,11 @@
     "FormLabel": "Collection name",
     "FormLabelARIA": "name",
     "NameRequired": "Collection name is required",
+    "NameTooLong": "Collection name cannot exceed 100 characters",
     "Description": "Description (optional)",
     "DescriptionARIA": "description",
     "DescriptionPlaceholder": "My fave sketches",
+    "DescriptionTooLong": "Description cannot exceed 500 characters",
     "SubmitCollectionCreate": "Create collection"
   },
   "DashboardView": {

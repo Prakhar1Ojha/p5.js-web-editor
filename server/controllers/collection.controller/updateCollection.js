@@ -5,7 +5,7 @@ function removeUndefined(obj) {
   return omitBy(obj, isUndefined);
 }
 
-export default function createCollection(req, res) {
+export default function updateCollection(req, res) {
   const { id: collectionId } = req.params;
   const owner = req.user._id;
   const { name, description, slug } = req.body;
@@ -16,7 +16,9 @@ export default function createCollection(req, res) {
     slug
   });
 
-  function sendFailure({ code = 500, message = 'Something went wrong' }) {
+  function sendFailure(err = {}) {
+    const code = err.name === 'ValidationError' ? 400 : err.code || 500;
+    const message = err.message || 'Something went wrong';
     res.status(code).json({ success: false, message });
   }
 
@@ -30,6 +32,34 @@ export default function createCollection(req, res) {
     }
 
     res.json(collection);
+  }
+
+  if (
+    name !== undefined &&
+    (typeof name !== 'string' || name.trim().length === 0)
+  ) {
+    sendFailure({ code: 400, message: 'Collection name cannot be empty' });
+    return null;
+  }
+
+  if (name !== undefined && name.length > 100) {
+    sendFailure({
+      code: 400,
+      message: 'Collection name cannot exceed 100 characters'
+    });
+    return null;
+  }
+
+  if (
+    description !== undefined &&
+    description !== null &&
+    (typeof description !== 'string' || description.length > 500)
+  ) {
+    sendFailure({
+      code: 400,
+      message: 'Collection description cannot exceed 500 characters'
+    });
+    return null;
   }
 
   async function findAndUpdateCollection() {

@@ -105,10 +105,11 @@ const CollectionListRowBase = (props) => {
   };
 
   const updateName = () => {
-    const isValid = renameValue.trim().length !== 0;
+    const trimmed = renameValue.trim();
+    const isValid = trimmed.length !== 0 && trimmed.length <= 100;
     if (isValid) {
       props.editCollection(props.collection.id, {
-        name: renameValue.trim()
+        name: trimmed
       });
     }
   };
@@ -196,6 +197,7 @@ const CollectionListRowBase = (props) => {
         {renameOpen && (
           <input
             value={renameValue}
+            maxLength={100}
             onChange={handleRenameChange}
             onKeyDown={handleRenameEnter}
             onBlur={handleRenameBlur}
