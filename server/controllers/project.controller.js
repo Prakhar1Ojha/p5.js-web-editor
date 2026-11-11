@@ -468,7 +468,7 @@ export async function changeProjectVisibility(req, res) {
     }
 
     const updatedProject = await Project.findByIdAndUpdate(
-      projectId,
+      project._id,
       {
         visibility: newVisibility
       },

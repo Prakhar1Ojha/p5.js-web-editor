@@ -214,6 +214,140 @@ describe('project.controller', () => {
   });
 
   describe('changeProjectVisibility()', () => {
+    it('updates visibility successfully when projectId is an id', async () => {
+      const request = new Request();
+      request.setBody({ projectId: 'project-123', visibility: 'Public' });
+      request.user = { _id: 'owner-id' };
+      const response = new Response();
+
+      const mockProject = {
+        _id: 'project-123',
+        slug: 'my-project',
+        user: { equals: jest.fn().mockReturnValue(true) }
+      };
+      const mockUpdated = {
+        _id: 'project-123',
+        visibility: 'Public',
+        user: { username: 'owner' }
+      };
+
+      Project.findOne = jest.fn().mockResolvedValue(mockProject);
+      const mockExec = jest.fn().mockResolvedValue(mockUpdated);
+      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
+      Project.findByIdAndUpdate = jest
+        .fn()
+        .mockReturnValue({ populate: mockPopulate });
+
+      await changeProjectVisibility(request, response);
+
+      expect(Project.findOne).toHaveBeenCalledWith({
+        $or: [{ _id: 'project-123' }, { slug: 'project-123' }]
+      });
+      expect(Project.findByIdAndUpdate).toHaveBeenCalledWith(
+        'project-123',
+        { visibility: 'Public' },
+        { new: true, runValidators: true }
+      );
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith(mockUpdated);
+    });
+
+    it('updates visibility by project._id when projectId is a slug', async () => {
+      const request = new Request();
+      request.setBody({ projectId: 'my-project-slug', visibility: 'Public' });
+      request.user = { _id: 'owner-id' };
+      const response = new Response();
+
+      const mockProject = {
+        _id: 'project-id-456',
+        slug: 'my-project-slug',
+        user: { equals: jest.fn().mockReturnValue(true) }
+      };
+      const mockUpdated = {
+        _id: 'project-id-456',
+        slug: 'my-project-slug',
+        visibility: 'Public',
+        user: { username: 'owner' }
+      };
+
+      Project.findOne = jest.fn().mockResolvedValue(mockProject);
+      const mockExec = jest.fn().mockResolvedValue(mockUpdated);
+      const mockPopulate = jest.fn().mockReturnValue({ exec: mockExec });
+      Project.findByIdAndUpdate = jest
+        .fn()
+        .mockReturnValue({ populate: mockPopulate });
+
+      await changeProjectVisibility(request, response);
+
+      expect(Project.findOne).toHaveBeenCalledWith({
+        $or: [{ _id: 'my-project-slug' }, { slug: 'my-project-slug' }]
+      });
+      expect(Project.findByIdAndUpdate).toHaveBeenCalledWith(
+        'project-id-456',
+        { visibility: 'Public' },
+        { new: true, runValidators: true }
+      );
+      expect(response.status).toHaveBeenCalledWith(200);
+      expect(response.json).toHaveBeenCalledWith(mockUpdated);
+    });
+
+    it('returns 404 if project is not found', async () => {
+      const request = new Request();
+      request.setBody({ projectId: 'non-existent', visibility: 'Public' });
+      request.user = { _id: 'user-id' };
+      const response = new Response();
+
+      Project.findOne = jest.fn().mockResolvedValue(null);
+
+      await changeProjectVisibility(request, response);
+
+      expect(response.status).toHaveBeenCalledWith(404);
+      expect(response.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'No project found.'
+      });
+    });
+
+    it('returns 403 if user is not the owner', async () => {
+      const request = new Request();
+      request.setBody({ projectId: 'project-123', visibility: 'Public' });
+      request.user = { _id: 'non-owner-id' };
+      const response = new Response();
+
+      Project.findOne = jest.fn().mockResolvedValue({
+        _id: 'project-123',
+        user: { equals: jest.fn().mockReturnValue(false) }
+      });
+
+      await changeProjectVisibility(request, response);
+
+      expect(response.status).toHaveBeenCalledWith(403);
+      expect(response.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Unauthorized action.'
+      });
+    });
+
+    it('returns 400 if visibility value is invalid', async () => {
+      const request = new Request();
+      request.setBody({ projectId: 'project-123', visibility: 'InvalidValue' });
+      request.user = { _id: 'owner-id' };
+      const response = new Response();
+
+      Project.findOne = jest.fn().mockResolvedValue({
+        _id: 'project-123',
+        user: { equals: jest.fn().mockReturnValue(true) }
+      });
+
+      await changeProjectVisibility(request, response);
+
+      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Invalid data.'
+      });
+    });
+
     it('does not leak the error object when the update fails', async () => {
       const request = new Request();
       request.setBody({ projectId: 'project-123', visibility: 'Private' });
@@ -225,6 +359,7 @@ describe('project.controller', () => {
 
       const dbError = new Error('connection to mongo lost');
       Project.findOne = jest.fn().mockResolvedValue({
+        _id: 'project-123',
         user: { equals: jest.fn().mockReturnValue(true) }
       });
       Project.findByIdAndUpdate = jest.fn().mockImplementation(() => {
